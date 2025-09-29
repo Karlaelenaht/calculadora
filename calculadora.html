@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Curvas Elípticas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cbc;
+            --accent-color: #ff6b6b;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--light-color);
+            padding-bottom: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .info-display {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            display: inline-block;
+            width: 150px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .operations-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .operations-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .operation-group {
+            margin-bottom: 15px;
+        }
+        
+        .operation-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .point-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .result-display {
+            background-color: #e9f7ef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+        
+        .lambda-info {
+            background-color: #e7f3ff;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+        }
+        
+        .alert {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Curvas Elípticas</h1>
+            <p class="subtitle">Cálculo y visualización de curvas elípticas sobre campos finitos</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <div class="card">
+                    <h2 class="card-title">Parámetros de la Curva</h2>
+                    <div class="input-group">
+                        <label for="a">Parámetro a:</label>
+                        <input type="number" id="a" value="2">
+                    </div>
+                    <div class="input-group">
+                        <label for="b">Parámetro b:</label>
+                        <input type="number" id="b" value="3">
+                    </div>
+                    <div class="input-group">
+                        <label for="p">Módulo p:</label>
+                        <input type="number" id="p" value="17">
+                    </div>
+                    <button class="btn btn-success" id="validate-btn">Validar Curva</button>
+                    <button class="btn" id="calculate-points-btn">Calcular Puntos</button>
+                    <button class="btn" id="graph-btn">Graficar Curva</button>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Información de la Curva</h2>
+                    <div class="info-display">
+                        <div class="info-item">
+                            <span class="info-label">Ecuación:</span>
+                            <span id="equation">y² = x³ + 2x + 3 (mod 17)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Delta (Δ):</span>
+                            <span id="delta">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Cardinalidad:</span>
+                            <span id="cardinality">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Estado:</span>
+                            <span id="curve-status">No validada</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="points-list">Puntos de la curva:</label>
+                        <textarea id="points-list" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="card">
+                    <h2 class="card-title">Operaciones con Puntos</h2>
+                    <div class="operations-section">
+                        <div class="operation-group">
+                            <h3 class="operation-title">Suma de Puntos</h3>
+                            <div class="point-inputs">
+                                <div>
+                                    <label for="p1-x">P.x:</label>
+                                    <input type="number" id="p1-x" value="5">
+                                </div>
+                                <div>
+                                    <label for="p1-y">P.y:</label>
+                                    <input type="number" id="p1-y" value="1">
+                                </div>
+                                <div>
+                                    <label for="p2-x">Q.x:</label>
+                                    <input type="number" id="p2-x" value="6">
+                                </div>
+                                <div>
+                                    <label for="p2-y">Q.y:</label>
+                                    <input type="number" id="p2-y" value="3">
+                                </div>
+                            </div>
+                            <button class="btn" id="sum-btn">Calcular P + Q</button>
+                            <div class="result-display" id="sum-result"></div>
+                            <div class="lambda-info" id="sum-lambda"></div>
+                        </div>
+                        
+                        <div class="operation-group">
+                            <h3 class="operation-title">Doblado de Punto</h3>
+                            <div class="point-inputs">
+                                <div>
+                                    <label for="double-x">P.x:</label>
+                                    <input type="number" id="double-x" value="5">
+                                </div>
+                                <div>
+                                    <label for="double-y">P.y:</label>
+                                    <input type="number" id="double-y" value="1">
+                                </div>
+                            </div>
+                            <button class="btn" id="double-btn">Calcular 2P</button>
+                            <div class="result-display" id="double-result"></div>
+                            <div class="lambda-info" id="double-lambda"></div>
+                        </div>
+                        
+                        <div class="operation-group">
+                            <h3 class="operation-title">Multiplicación Escalar</h3>
+                            <div class="point-inputs">
+                                <div>
+                                    <label for="scalar-x">P.x:</label>
+                                    <input type="number" id="scalar-x" value="5">
+                                </div>
+                                <div>
+                                    <label for="scalar-y">P.y:</label>
+                                    <input type="number" id="scalar-y" value="1">
+                                </div>
+                                <div>
+                                    <label for="n">n:</label>
+                                    <input type="number" id="n" value="3">
+                                </div>
+                            </div>
+                            <button class="btn" id="scalar-btn">Calcular nP</button>
+                            <div class="result-display" id="scalar-result"></div>
+                            <div class="lambda-info" id="scalar-lambda"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Gráfica de la Curva</h2>
+                    <div class="chart-container">
+                        <canvas id="curve-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentCurve = {
+            a: 2,
+            b: 3,
+            p: 17,
+            points: [],
+            valid: false,
+            delta: 0,
+            cardinality: 0
+        };
+
+        let chart = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar event listeners
+            document.getElementById('validate-btn').addEventListener('click', validateCurve);
+            document.getElementById('calculate-points-btn').addEventListener('click', calculatePoints);
+            document.getElementById('graph-btn').addEventListener('click', graphCurve);
+            document.getElementById('sum-btn').addEventListener('click', calculateSum);
+            document.getElementById('double-btn').addEventListener('click', calculateDouble);
+            document.getElementById('scalar-btn').addEventListener('click', calculateScalar);
+            
+            // Validar curva inicial
+            validateCurve();
+        });
+
+        // Funciones de utilidad matemática
+        function modInverse(a, m) {
+            let m0 = m;
+            let y = 0, x = 1;
+            
+            if (m === 1) return 0;
+            
+            while (a > 1) {
+                let q = Math.floor(a / m);
+                let t = m;
+                
+                m = a % m;
+                a = t;
+                t = y;
+                
+                y = x - q * y;
+                x = t;
+            }
+            
+            if (x < 0) x += m0;
+            
+            return x;
+        }
+
+        function mod(n, m) {
+            return ((n % m) + m) % m;
+        }
+
+        // Funciones principales
+        function validateCurve() {
+            const a = parseInt(document.getElementById('a').value);
+            const b = parseInt(document.getElementById('b').value);
+            const p = parseInt(document.getElementById('p').value);
+            
+            // Calcular delta: Δ = -16(4a³ + 27b²) mod p
+            const term1 = mod(4 * Math.pow(a, 3), p);
+            const term2 = mod(27 * Math.pow(b, 2), p);
+            const deltaValue = mod(-16 * mod(term1 + term2, p), p);
+            
+            currentCurve.a = a;
+            currentCurve.b = b;
+            currentCurve.p = p;
+            currentCurve.delta = deltaValue;
+            currentCurve.valid = (deltaValue !== 0);
+            
+            // Actualizar la interfaz
+            document.getElementById('equation').textContent = `y² = x³ + ${a}x + ${b} (mod ${p})`;
+            document.getElementById('delta').textContent = deltaValue;
+            document.getElementById('curve-status').textContent = currentCurve.valid ? 'Válida' : 'Inválida';
+            document.getElementById('curve-status').style.color = currentCurve.valid ? 'green' : 'red';
+            
+            if (currentCurve.valid) {
+                showAlert('Curva válida', 'success');
+            } else {
+                showAlert('Curva inválida: Δ = 0', 'danger');
+            }
+        }
+
+        function calculatePoints() {
+            if (!currentCurve.valid) {
+                showAlert('Primero debe validar una curva válida', 'warning');
+                return;
+            }
+            
+            const { a, b, p } = currentCurve;
+            const points = [];
+            
+            for (let x = 0; x < p; x++) {
+                const rhs = mod(Math.pow(x, 3) + a * x + b, p);
+                
+                for (let y = 0; y < p; y++) {
+                    const lhs = mod(y * y, p);
+                    if (lhs === rhs) {
+                        points.push({ x, y });
+                    }
+                }
+            }
+            
+            currentCurve.points = points;
+            currentCurve.cardinality = points.length + 1;
+            
+            document.getElementById('cardinality').textContent = currentCurve.cardinality;
+            
+            let pointsText = '';
+            points.forEach(point => {
+                pointsText += `(${point.x}, ${point.y})\n`;
+            });
+            pointsText += '∞';
+            
+            document.getElementById('points-list').value = pointsText;
+            
+            showAlert(`Se encontraron ${points.length} puntos`, 'success');
+        }
+
+        function graphCurve() {
+            if (!currentCurve.valid || currentCurve.points.length === 0) {
+                showAlert('Primero debe calcular los puntos de una curva válida', 'warning');
+                return;
+            }
+            
+            const ctx = document.getElementById('curve-chart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Puntos de la curva',
+                        data: currentCurve.points,
+                        backgroundColor: 'rgba(74, 111, 165, 0.7)',
+                        borderColor: 'rgba(74, 111, 165, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'X' },
+                            min: 0,
+                            max: currentCurve.p - 1,
+                            ticks: { stepSize: 1 }
+                        },
+                        y: {
+                            title: { display: true, text: 'Y' },
+                            min: 0,
+                            max: currentCurve.p - 1,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Curva Elíptica: y² = x³ + ${currentCurve.a}x + ${currentCurve.b} (mod ${currentCurve.p})`
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `(${context.parsed.x}, ${context.parsed.y})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateSum() {
+            if (!currentCurve.valid || currentCurve.points.length === 0) {
+                showAlert('Primero debe calcular los puntos de una curva válida', 'warning');
+                return;
+            }
+            
+            const p1x = parseInt(document.getElementById('p1-x').value);
+            const p1y = parseInt(document.getElementById('p1-y').value);
+            const p2x = parseInt(document.getElementById('p2-x').value);
+            const p2y = parseInt(document.getElementById('p2-y').value);
+            const p = currentCurve.p;
+            const a = currentCurve.a;
+            
+            if (!isPointOnCurve(p1x, p1y) || !isPointOnCurve(p2x, p2y)) {
+                showAlert('Uno o ambos puntos no están en la curva', 'danger');
+                return;
+            }
+            
+            let result;
+            let lambda;
+            
+            if (p1x === p2x && mod(p1y + p2y, p) === 0) {
+                result = '∞ (punto en el infinito)';
+                lambda = 'λ = ∞ (puntos opuestos)';
+            }
+            else if (p1x === p2x && p1y === p2y) {
+                const doubleResult = calculateDoublePoint(p1x, p1y, p, a);
+                result = doubleResult.result;
+                lambda = doubleResult.lambda;
+            }
+            else {
+                const numerator = mod(p2y - p1y, p);
+                const denominator = mod(p2x - p1x, p);
+                lambda = mod(numerator * modInverse(denominator, p), p);
+                
+                const x3 = mod(lambda * lambda - p1x - p2x, p);
+                const y3 = mod(lambda * (p1x - x3) - p1y, p);
+                
+                result = `(${x3}, ${y3})`;
+                lambda = `λ = ${lambda}`;
+            }
+            
+            document.getElementById('sum-result').textContent = `P + Q = ${result}`;
+            document.getElementById('sum-lambda').textContent = lambda;
+        }
+
+        function calculateDouble() {
+            if (!currentCurve.valid || currentCurve.points.length === 0) {
+                showAlert('Primero debe calcular los puntos de una curva válida', 'warning');
+                return;
+            }
+            
+            const px = parseInt(document.getElementById('double-x').value);
+            const py = parseInt(document.getElementById('double-y').value);
+            const p = currentCurve.p;
+            const a = currentCurve.a;
+            
+            if (!isPointOnCurve(px, py)) {
+                showAlert('El punto no está en la curva', 'danger');
+                return;
+            }
+            
+            if (py === 0) {
+                document.getElementById('double-result').textContent = '2P = ∞ (punto en el infinito)';
+                document.getElementById('double-lambda').textContent = 'λ = ∞ (tangente vertical)';
+                return;
+            }
+            
+            const result = calculateDoublePoint(px, py, p, a);
+            document.getElementById('double-result').textContent = `2P = ${result.result}`;
+            document.getElementById('double-lambda').textContent = result.lambda;
+        }
+
+        function calculateDoublePoint(px, py, p, a) {
+            const numerator = mod(3 * px * px + a, p);
+            const denominator = mod(2 * py, p);
+            const lambda = mod(numerator * modInverse(denominator, p), p);
+            
+            const x3 = mod(lambda * lambda - 2 * px, p);
+            const y3 = mod(lambda * (px - x3) - py, p);
+            
+            return {
+                result: `(${x3}, ${y3})`,
+                lambda: `λ = ${lambda}`
+            };
+        }
+
+        function calculateScalar() {
+            if (!currentCurve.valid || currentCurve.points.length === 0) {
+                showAlert('Primero debe calcular los puntos de una curva válida', 'warning');
+                return;
+            }
+            
+            const px = parseInt(document.getElementById('scalar-x').value);
+            const py = parseInt(document.getElementById('scalar-y').value);
+            const n = parseInt(document.getElementById('n').value);
+            const p = currentCurve.p;
+            const a = currentCurve.a;
+            
+            if (!isPointOnCurve(px, py)) {
+                showAlert('El punto no está en la curva', 'danger');
+                return;
+            }
+            
+            if (n <= 0) {
+                showAlert('n debe ser un entero positivo', 'danger');
+                return;
+            }
+            
+            let result = null;
+            let current = { x: px, y: py };
+            let exponent = n;
+            let lambdas = [];
+            
+            while (exponent > 0) {
+                if (exponent % 2 === 1) {
+                    if (result === null) {
+                        result = { ...current };
+                        lambdas.push(`Inicio: P = (${px}, ${py})`);
+                    } else {
+                        // Calcular lambda para esta suma
+                        const sumLambda = calculateSumLambda(result.x, result.y, current.x, current.y, p);
+                        lambdas.push(`Suma: λ = ${sumLambda}`);
+                        result = addPoints(result, current, p, a);
+                    }
+                }
+                
+                if (exponent > 1) {
+                    // Calcular lambda para este doblado
+                    const doubleLambda = calculateDoubleLambda(current.x, current.y, p, a);
+                    lambdas.push(`Doblado: λ = ${doubleLambda}`);
+                    current = doublePointCalc(current, p, a);
+                }
+                
+                exponent = Math.floor(exponent / 2);
+            }
+            
+            let lambdaInfo;
+            if (result === null) {
+                document.getElementById('scalar-result').textContent = 'nP = ∞ (punto en el infinito)';
+                lambdaInfo = 'λ = ∞';
+            } else {
+                document.getElementById('scalar-result').textContent = `nP = (${result.x}, ${result.y})`;
+                // Mostrar el último lambda calculado
+                if (lambdas.length > 0) {
+                    lambdaInfo = lambdas[lambdas.length - 1];
+                } else {
+                    lambdaInfo = 'λ = 1 (P inicial)';
+                }
+            }
+            
+            document.getElementById('scalar-lambda').textContent = lambdaInfo;
+        }
+
+        // Funciones auxiliares para calcular lambda
+        function calculateSumLambda(x1, y1, x2, y2, p) {
+            if (x1 === x2 && mod(y1 + y2, p) === 0) {
+                return '∞';
+            }
+            if (x1 === x2 && y1 === y2) {
+                return calculateDoubleLambda(x1, y1, p, currentCurve.a);
+            }
+            const numerator = mod(y2 - y1, p);
+            const denominator = mod(x2 - x1, p);
+            return mod(numerator * modInverse(denominator, p), p);
+        }
+
+        function calculateDoubleLambda(x, y, p, a) {
+            if (y === 0) return '∞';
+            const numerator = mod(3 * x * x + a, p);
+            const denominator = mod(2 * y, p);
+            return mod(numerator * modInverse(denominator, p), p);
+        }
+
+        function isPointOnCurve(x, y) {
+            const lhs = mod(y * y, currentCurve.p);
+            const rhs = mod(Math.pow(x, 3) + currentCurve.a * x + currentCurve.b, currentCurve.p);
+            return lhs === rhs;
+        }
+
+        function addPoints(p1, p2, p, a) {
+            if (p1.x === p2.x && mod(p1.y + p2.y, p) === 0) {
+                return null;
+            }
+            
+            if (p1.x === p2.x && p1.y === p2.y) {
+                return doublePointCalc(p1, p, a);
+            }
+            
+            const numerator = mod(p2.y - p1.y, p);
+            const denominator = mod(p2.x - p1.x, p);
+            const lambda = mod(numerator * modInverse(denominator, p), p);
+            
+            const x3 = mod(lambda * lambda - p1.x - p2.x, p);
+            const y3 = mod(lambda * (p1.x - x3) - p1.y, p);
+            
+            return { x: x3, y: y3 };
+        }
+
+        function doublePointCalc(point, p, a) {
+            if (point.y === 0) {
+                return null;
+            }
+            
+            const numerator = mod(3 * point.x * point.x + a, p);
+            const denominator = mod(2 * point.y, p);
+            const lambda = mod(numerator * modInverse(denominator, p), p);
+            
+            const x3 = mod(lambda * lambda - 2 * point.x, p);
+            const y3 = mod(lambda * (point.x - x3) - point.y, p);
+            
+            return { x: x3, y: y3 };
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
